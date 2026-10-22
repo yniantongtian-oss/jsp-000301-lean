@@ -14,6 +14,19 @@ jobs:
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Reject sorry and admit in Lean sources
+        run: python3 .github/quality/check_no_sorry.py
       - uses: leanprover/lean-action@24581d74d674803a25a81b10b059c5c0cdd344c6 # v1.6.2
+        with:
+          # Fail if any declaration depends on sorryAx, native_decide, or another
+          # axiom outside the standard kernel trio.
+          axiom-audit: true
       - name: Axiom audit
-        run: lake env lean Audit.lean
+        run: |
+          set -euo pipefail
+          out="$(lake env lean Audit.lean)"
+          printf '%s\n' "$out"
+          if printf '%s\n' "$out" | grep -F -q sorryAx; then
+            echo "error: an audited theorem depends on sorryAx" >&2
+            exit 1
+          fi
