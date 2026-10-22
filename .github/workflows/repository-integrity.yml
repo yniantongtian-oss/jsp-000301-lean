@@ -25,3 +25,5 @@ jobs:
           python-version: '3.12'
       - name: Check tracked paths and package manifests
         run: python .github/quality/check_repository.py
+      - name: Reject sorry and admit in Lean sources
+        run: python .github/quality/check_no_sorry.py
